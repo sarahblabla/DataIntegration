@@ -1,50 +1,33 @@
--- Creating the Fact Table (Box Office Data)
-CREATE TABLE Fact_BoxOffice (
-    box_office_id SERIAL PRIMARY KEY,
-    movie_id INT,
-    revenue BIGINT,
-    budget BIGINT,
-    release_year INT,
-    FOREIGN KEY (movie_id) REFERENCES Dim_Movie(movie_id)
+CREATE DATABASE IF NOT EXISTS movies;
+USE movies;
+
+-- Movies Table (Fact Table)
+CREATE TABLE Fact_Movie (
+    movie_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255),  -- "Release Group"
+    release_year INT,  -- "Year"
+    worldwide_revenue BIGINT,  -- "$Worldwide"
+    domestic_revenue BIGINT,  -- "$Domestic"
+    domestic_percentage DECIMAL(5,2),  -- "Domestic %"
+    foreign_revenue BIGINT,  -- "$Foreign"
+    foreign_percentage DECIMAL(5,2),  -- "Foreign %"
+    rating DECIMAL(3,1),  -- "Rating"
+    vote_count INT,  -- "Vote_Count"
+    original_language VARCHAR(10),  -- "Original_Language"
+    production_country_id INT,  -- "Production_Countries" (Linked to Dim_ProductionCountry)
+    genre_id INT,  -- "Genres" (Linked to Dim_Genre)
+    FOREIGN KEY (production_country_id) REFERENCES Dim_ProductionCountry(production_country_id),
+    FOREIGN KEY (genre_id) REFERENCES Dim_Genre(genre_id)
 );
 
--- Creating the Dimension Tables
-CREATE TABLE Dim_Movie (
-    movie_id SERIAL PRIMARY KEY,
-    title VARCHAR(255),
-    genre VARCHAR(100),
-    runtime INT,
-    release_date DATE,
-    director_id INT,
-    production_company_id INT,
-    FOREIGN KEY (director_id) REFERENCES Dim_Director(director_id),
-    FOREIGN KEY (production_company_id) REFERENCES Dim_ProductionCompany(production_company_id)
+-- Genres Table (Dimension Table)
+CREATE TABLE Dim_Genre (
+    genre_id INT AUTO_INCREMENT PRIMARY KEY,
+    genre_name VARCHAR(100) UNIQUE
 );
 
-CREATE TABLE Dim_Actor (
-    actor_id SERIAL PRIMARY KEY,
-    name VARCHAR(255),
-    nationality VARCHAR(100),
-    num_movies INT
-);
-
-CREATE TABLE Dim_Director (
-    director_id SERIAL PRIMARY KEY,
-    name VARCHAR(255),
-    nationality VARCHAR(100)
-);
-
-CREATE TABLE Dim_ProductionCompany (
-    production_company_id SERIAL PRIMARY KEY,
-    name VARCHAR(255),
-    country VARCHAR(100)
-);
-
--- Creating a Many-to-Many Relationship Table for Movies & Actors
-CREATE TABLE Movie_Actor (
-    movie_id INT,
-    actor_id INT,
-    PRIMARY KEY (movie_id, actor_id),
-    FOREIGN KEY (movie_id) REFERENCES Dim_Movie(movie_id),
-    FOREIGN KEY (actor_id) REFERENCES Dim_Actor(actor_id)
+-- Production Countries Table (Dimension Table)
+CREATE TABLE Dim_ProductionCountry (
+    production_country_id INT AUTO_INCREMENT PRIMARY KEY,
+    country VARCHAR(100) UNIQUE
 );
