@@ -1,0 +1,19 @@
+-- Creating Nodes for Movies, Actors, and Directors
+CREATE (:Movie {title: 'Inception', release_year: 2010, genre: 'Sci-Fi'})
+CREATE (:Actor {name: 'Leonardo DiCaprio'})
+CREATE (:Director {name: 'Christopher Nolan'})
+
+-- Creating Relationships
+MATCH (a:Actor {name: 'Leonardo DiCaprio'}), (m:Movie {title: 'Inception'})
+CREATE (a)-[:ACTED_IN]->(m)
+
+MATCH (d:Director {name: 'Christopher Nolan'}), (m:Movie {title: 'Inception'})
+CREATE (d)-[:DIRECTED]->(m)
+
+-- Query to Find All Movies an Actor Has Worked In
+MATCH (a:Actor {name: 'Leonardo DiCaprio'})-[:ACTED_IN]->(m:Movie)
+RETURN a.name, m.title
+
+-- Query to Find Directors Who Have Worked on Sci-Fi Movies
+MATCH (d:Director)-[:DIRECTED]->(m:Movie {genre: 'Sci-Fi'})
+RETURN d.name, m.title
