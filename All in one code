@@ -1,0 +1,69 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from neo4j import GraphDatabase
+import psycopg2
+
+# Load Dataset
+df = pd.read_csv('movies_box_office.csv')
+
+# Display first rows
+print(df.head())
+
+# Scatter Plot: Revenue vs Budget
+plt.figure(figsize=(10,6))
+plt.scatter(df['budget'], df['revenue'], alpha=0.5)
+plt.xlabel('Budget')
+plt.ylabel('Revenue')
+plt.title('Revenue vs Budget')
+plt.show()
+
+# Clustering: Budget, Revenue, Popularity
+features = df[['budget', 'revenue', 'popularity']].dropna()
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(features)
+
+kmeans = KMeans(n_clusters=3, random_state=42)
+kmeans.fit(scaled_features)
+features['cluster'] = kmeans.labels_
+
+# Visualizing Clusters
+plt.figure(figsize=(10,6))
+plt.scatter(features['budget'], features['revenue'], c=features['cluster'], cmap='viridis', alpha=0.5)
+plt.xlabel('Budget')
+plt.ylabel('Revenue')
+plt.title('K-Means Clustering (Budget vs Revenue)')
+plt.show()
+
+# Connect to PostgreSQL Database
+conn = psycopg2.connect(
+    dbname="movies_db", user="postgres", password="password", host="localhost", port="5432"
+)
+cursor = conn.cursor()
+
+# Insert Data into PostgreSQL
+cursor.execute("INSERT INTO Dim_Director (name, nationality) VALUES ('Christopher Nolan', 'British-American')")
+cursor.execute("INSERT INTO Dim_Actor (name, nationality, num_movies) VALUES ('Leonardo DiCaprio', 'American', 50)")
+cursor.execute("INSERT INTO Dim_Movie (title, genre, runtime, release_date, director_id) VALUES ('Inception', 'Sci-Fi', 148, '2010-07-16', 1)")
+cursor.execute("INSERT INTO Fact_BoxOffice (movie_id, revenue, budget, release_year) VALUES (1, 829895144, 160000000, 2010)")
+conn.commit()
+cursor.close()
+conn.close()
+
+# Connect to Neo4j Database
+driver = GraphDatabase.driver('bolt://localhost:7687', auth=('neo4j', 'password'))
+
+def insert_data(tx, query, params={}):
+    tx.run(query, **params)
+
+with driver.session() as session:
+    session.write_transaction(insert_data, "CREATE (:Movie {title: 'Inception', release_year: 2010, genre: 'Sci-Fi'})")
+    session.write_transaction(insert_data, "CREATE (:Actor {name: 'Leonardo DiCaprio'})")
+    session.write_transaction(insert_data, "CREATE (:Director {name: 'Christopher Nolan'})")
+    session.write_transaction(insert_data, "MATCH (a:Actor {name: 'Leonardo DiCaprio'}), (m:Movie {title: 'Inception'}) CREATE (a)-[:ACTED_IN]->(m)")
+    session.write_transaction(insert_data, "MATCH (d:Director {name: 'Christopher Nolan'}), (m:Movie {title: 'Inception'}) CREATE (d)-[:DIRECTED]->(m)")
+
+driver.close()
+
+print("Data successfully inserted into PostgreSQL and Neo4j!")
