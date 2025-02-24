@@ -1,0 +1,50 @@
+-- Creating the Fact Table (Box Office Data)
+CREATE TABLE Fact_BoxOffice (
+    box_office_id SERIAL PRIMARY KEY,
+    movie_id INT,
+    revenue BIGINT,
+    budget BIGINT,
+    release_year INT,
+    FOREIGN KEY (movie_id) REFERENCES Dim_Movie(movie_id)
+);
+
+-- Creating the Dimension Tables
+CREATE TABLE Dim_Movie (
+    movie_id SERIAL PRIMARY KEY,
+    title VARCHAR(255),
+    genre VARCHAR(100),
+    runtime INT,
+    release_date DATE,
+    director_id INT,
+    production_company_id INT,
+    FOREIGN KEY (director_id) REFERENCES Dim_Director(director_id),
+    FOREIGN KEY (production_company_id) REFERENCES Dim_ProductionCompany(production_company_id)
+);
+
+CREATE TABLE Dim_Actor (
+    actor_id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    nationality VARCHAR(100),
+    num_movies INT
+);
+
+CREATE TABLE Dim_Director (
+    director_id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    nationality VARCHAR(100)
+);
+
+CREATE TABLE Dim_ProductionCompany (
+    production_company_id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    country VARCHAR(100)
+);
+
+-- Creating a Many-to-Many Relationship Table for Movies & Actors
+CREATE TABLE Movie_Actor (
+    movie_id INT,
+    actor_id INT,
+    PRIMARY KEY (movie_id, actor_id),
+    FOREIGN KEY (movie_id) REFERENCES Dim_Movie(movie_id),
+    FOREIGN KEY (actor_id) REFERENCES Dim_Actor(actor_id)
+);
