@@ -1,0 +1,32 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+# Load Dataset
+df = pd.read_csv('movies_box_office.csv')
+
+# Scatter Plot: Revenue vs Budget
+plt.figure(figsize=(10,6))
+plt.scatter(df['budget'], df['revenue'], alpha=0.5)
+plt.xlabel('Budget')
+plt.ylabel('Revenue')
+plt.title('Revenue vs Budget')
+plt.show()
+
+# Clustering: Budget, Revenue, Popularity
+features = df[['budget', 'revenue', 'popularity']].dropna()
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(features)
+
+kmeans = KMeans(n_clusters=3, random_state=42)
+kmeans.fit(scaled_features)
+features['cluster'] = kmeans.labels_
+
+# Visualizing Clusters
+plt.figure(figsize=(10,6))
+plt.scatter(features['budget'], features['revenue'], c=features['cluster'], cmap='viridis', alpha=0.5)
+plt.xlabel('Budget')
+plt.ylabel('Revenue')
+plt.title('K-Means Clustering (Budget vs Revenue)')
+plt.show()
